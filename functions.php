@@ -4,6 +4,7 @@ add_action( 'wp_enqueue_scripts', function () {
 	wp_enqueue_style( 'main-style', get_stylesheet_uri(), [], filemtime( get_stylesheet_directory() . '/style.css' ) );
 	wp_enqueue_script( 'main-script', get_template_directory_uri() . '/main.js', [ 'jquery' ],
 		filemtime( get_stylesheet_directory() . '/main.js' ) );
+	wp_enqueue_script( 'jquery-ui-datepicker' );
 } );
 add_action( 'wp_head', function () {
 	echo '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
@@ -11,6 +12,23 @@ add_action( 'wp_head', function () {
 
 add_theme_support( 'post-thumbnails' );
 add_theme_support( 'custom-logo' );
+
+//добавляем текст к логотипу
+function my_custom_customize_register( $wp_customize ) {
+	$wp_customize->add_setting( 'my_logo_text', [
+		'default'           => '',
+		'sanitize_callback' => 'sanitize_text_field',
+	] );
+
+	$wp_customize->add_control( 'my_logo_text', [
+		'label'    => __( 'Текст логотипа', 'textdomain' ),
+		'section'  => 'title_tagline',
+		'settings' => 'my_logo_text',
+		'type'     => 'text',
+	] );
+}
+
+add_action( 'customize_register', 'my_custom_customize_register' );
 
 // Добавляем атрибуты rel к ссылке
 function add_nofollow_to_custom_logo( $html ) {
@@ -21,51 +39,25 @@ function add_nofollow_to_custom_logo( $html ) {
 
 add_filter( 'get_custom_logo', 'add_nofollow_to_custom_logo' );
 
-
-/**
- * Обертка "Кота" для адимнки
- */
-add_action( 'admin_head', function () {
-	wp_enqueue_script( 'cat-script', get_template_directory_uri() . '/cat.js' );
-} );
-
-add_filter( 'login_headerurl', function () {
-	return 'https://01cat.ru';
-} );
-
-add_action( 'login_header', function () { ?>
-	<style>
-        #login h1 a {
-            background: url("logo.png") center top no-repeat !important;
-            width: 111px !important;
-            height: 180px !important;
-        }
-	</style>
-<?php } );
-add_filter( 'admin_footer_text', function () {
-	return '<b>Сделано:</b>
-			<a href="https://01cat.ru/" target="_blank">Двоичный кот</a>
-			<br>
-			<b>Техническая поддержка:</b> тел. <a href="tel:+79145416354">+7 (914) 541-63-54</a>, email: <a href="mailto:hello@01cat.ru">hello@01cat.ru</a>';
-} );
-
-/**
- * Валидация форм Contact Form 7
- */
+// Валидация форм Contact Form 7
 add_filter( 'wpcf7_validate', 'my_form_validate', 10, 2 );
 function my_form_validate( $result, $tags ) {
 	// Получим данные об отправляемой форме
 	$form = WPCF7_Submission::get_instance();
 
 	// Получаем данные полей
-	$callbackPhone   = $form->get_posted_data( 'callback-phone' );
+	$callbackPhone = $form->get_posted_data( 'callback-phone' );
+	$callbackDate  = $form->get_posted_data( 'callback-date' );
 
 	// Проверяем результат
-		if ( empty( $callbackPhone ) ) {
+	if ( empty( $callbackPhone ) ) {
 		$result->invalidate( 'callback-phone', 'Это поле обязательно' );
 	}
+	if ( empty( $callbackDate ) ) {
+		$result->invalidate( 'callback-date', 'Это поле обязательно' );
+	}
 
-		return $result;
+	return $result;
 }
 
 /** Выводит чистый номер телефона
@@ -80,8 +72,16 @@ function clearPhone( string $phone ): string {
 		')',
 		'+',
 		'&nbsp;',
-		functions . phpchr( 0xC2 ) . chr( 0xA0 ),
+		chr( 0xC2 ) . chr( 0xA0 ),
 	];
 
 	return str_replace( $to_replace, '', $phone );
+}
+
+//занятые даты из acf для календаря
+add_action( 'wp_footer', 'output_blocked_dates' );
+function output_blocked_dates() {
+	$dates_data = get_field( 'blocked_dates', 2 );
+	$dates = array_column($dates_data, 'date');
+	echo '<input type="hidden" id="blocked-dates" value="' . esc_attr( json_encode( $dates ) ) . '">';
 }

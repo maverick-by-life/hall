@@ -2,5 +2,12 @@
 @use "../variables" as *;
 
 .footer {
+    height: 283px;
 
+    @include mixins.laptopL {
+        height: 100px;
+    }
+    @include mixins.tablet {
+        height: 0;
+    }
 }

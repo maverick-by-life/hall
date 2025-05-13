@@ -2,14 +2,28 @@
 @use "../variables" as *;
 
 html {
-    background-color: white;
+    background-color: $grey;
     scroll-behavior:  smooth;
     height:           100%;
 }
 
+
 body {
     font-family: $font-family;
     font-style:  normal;
+    padding:     32px 50px 0;
+
+    @include mixins.tablet {
+        padding: 20px;
+    }
+    @include mixins.mobile {
+        padding: 20px 10px;
+    }
+}
+
+header, main, footer {
+    max-width: 1820px;
+    margin:    0 auto;
 }
 
 svg {
@@ -18,48 +32,24 @@ svg {
     }
 }
 
+
 .container {
-    padding:       0 40px;
-    width:         100%;
-    max-width:     1920px;
-    margin-inline: auto;
+    width:                 100%;
+    margin:                0 auto;
+    display:               grid;
+    grid-template-columns: repeat(12, 1fr);
+    column-gap:            30px;
 
-    @include mixins.mobile {
-        padding-left:  20px;
-        padding-right: 20px;
-    }
-}
 
-.btn {
-    display:          inline-flex;
-    align-items:      center;
-    justify-content:  center;
-    max-width:        100%;
-    height:           62px;
-    padding:          0 30px;
-    border-radius:    4px;
-    transition:       all $transition;
-    text-decoration:  none;
-    cursor:           pointer;
-    border:           1px solid transparent;
-    background-color: red;
-    color:            $white;
-    font-weight:      600;
-    font-size:        24px;
-
-    @include mixins.hover {
-        background-color: gray;
-    }
-
-    @include mixins.laptopXL {
-        height:    44px;
-        padding:   0 24px;
-        font-size: 16px;
+    @include mixins.tablet {
+        grid-template-columns: 1fr;
+        column-gap:            0;
+        padding-left:          15px;
+        padding-right:         15px;
     }
 
     @include mixins.mobile {
-        height:    37px;
-        padding:   0 20px;
-        font-size: 14px;
+
     }
 }
+
